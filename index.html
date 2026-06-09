@@ -187,242 +187,268 @@
 </head>
 
 <body>
-<main class="notion-shell">
+  <main class="notion-shell">
 
-  <section class="notion-hero">
-    <span class="notion-eyebrow">Philadelphia Police Department</span>
-    <h1>Arrest Charges + Jail Time Calculator</h1>
-    <p>Select charges to auto-calculate jail time (in minutes). Jail time is capped at <strong>60m</strong> in-game.</p>
-  </section>
+    <section class="notion-hero">
+      <span class="notion-eyebrow">Philadelphia Police Department</span>
+      <h1>Arrest Charges + Jail Time Calculator</h1>
+      <p>Select charges to auto-calculate jail time (in minutes). Jail time is capped at <strong>60m</strong> in-game.</p>
+    </section>
 
-  <section>
-    <div class="notion-callout" data-tone="blue">
-      <div>ℹ️</div>
-      <div>
-        <strong>How it works</strong>
-        <p>
-          Pick charges below. The calculator sums the minutes, applies the 60m cap,
-          and builds a command like: <span class="mono">/jail normal 15m Brandishing Firearm</span>.
-        </p>
+    <section>
+      <div class="notion-callout" data-tone="blue">
+        <div>ℹ️</div>
+        <div>
+          <strong>How it works</strong>
+          <p>
+            Pick charges below. The calculator sums the minutes, applies the 60m cap,
+            and builds a command like: <span class="mono">/jail normal 15m Brandishing Firearm</span>.
+          </p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section>
-    <div class="notion-card-grid">
-      <article class="notion-card" style="grid-column: span 12;">
-        <div class="notion-card-icon">🧮</div>
-        <h3>Calculator</h3>
-        <p class="small">
-          Tip: If any selected charge is <b>normal</b>, the output mode becomes <b>normal</b>.
-          Otherwise it stays <b>probation</b>.
-        </p>
+    <section>
+      <div class="notion-card-grid">
+        <article class="notion-card" style="grid-column: span 12;">
+          <div class="notion-card-icon">🧮</div>
+          <h3>Calculator</h3>
+          <p class="small">
+            Tip: If any selected charge is <b>normal</b>, the output mode becomes <b>normal</b>.
+            Otherwise it stays <b>probation</b>.
+          </p>
 
-        <div class="toolbar">
-          <div class="searchbar" role="search" aria-label="Search charges">
-            <span aria-hidden="true">🔎</span>
-            <input id="searchInput" type="search" placeholder="Search charges…" />
-            <button class="notion-button" data-size="small" data-variant="secondary" id="btn-search-clear" type="button">
-              Clear
-            </button>
+          <div class="toolbar">
+            <div class="searchbar" role="search" aria-label="Search charges">
+              <span aria-hidden="true">🔎</span>
+              <input id="searchInput" type="search" placeholder="Search charges…" />
+              <button class="notion-button" data-size="small" data-variant="secondary" id="btn-search-clear" type="button">Clear</button>
+            </div>
+
+            <button class="notion-button" data-variant="secondary" id="btn-select-all" type="button">Select all</button>
+            <button class="notion-button" data-variant="secondary" id="btn-clear" type="button">Clear selections</button>
+            <button class="notion-button" data-variant="primary" id="btn-copy" type="button">Copy command</button>
+
+            <span class="pill"><span>⏱️</span><span>Total:</span> <b id="totalMinutes">0m</b> <span class="small">(max 60m)</span></span>
+            <span class="pill"><span>⚖️</span><span>Mode:</span> <b id="mode">probation</b></span>
           </div>
 
-          <button class="notion-button" data-variant="secondary" id="btn-select-all" type="button">Select all</button>
-          <button class="notion-button" data-variant="secondary" id="btn-clear" type="button">Clear selections</button>
-          <button class="notion-button" data-variant="primary" id="btn-copy" type="button">Copy command</button>
+          <div class="output" style="margin-top: 12px;">
+            <div class="small" style="margin-bottom: 8px;">Generated jail command</div>
+            <pre class="mono" id="commandOut">/jail probation 0m</pre>
+          </div>
+        </article>
+      </div>
+    </section>
 
-          <span class="pill"><span>⏱️</span><span>Total:</span> <b id="totalMinutes">0m</b> <span class="small">(max 60m)</span></span>
-          <span class="pill"><span>⚖️</span><span>Mode:</span> <b id="mode">probation</b></span>
-        </div>
+    <section>
+      <table aria-label="Charges">
+        <thead>
+          <tr>
+            <th style="width: 48px;">Pick</th>
+            <th>Charge</th>
+            <th style="width: 140px;">Category</th>
+            <th style="width: 120px;">Mode</th>
+            <th style="width: 100px;">Time</th>
+          </tr>
+        </thead>
+        <tbody id="chargeTable"></tbody>
+      </table>
+    </section>
 
-        <div class="output" style="margin-top: 12px;">
-          <div class="small" style="margin-bottom: 8px;">Generated jail command</div>
-          <pre class="mono" id="commandOut">/jail probation 0m</pre>
-        </div>
-      </article>
-    </div>
-  </section>
+    <section>
+      <p class="notion-footer small">Unofficial in-game tool. Adjust wording/time if your server rules change.</p>
+    </section>
 
-  <section>
-    <table aria-label="Charges">
-      <thead>
-        <tr>
-          <th style="width: 48px;">Pick</th>
-          <th>Charge</th>
-          <th style="width: 140px;">Category</th>
-          <th style="width: 120px;">Mode</th>
-          <th style="width: 100px;">Time</th>
-        </tr>
-      </thead>
-      <tbody id="chargeTable"></tbody>
-    </table>
-  </section>
+  </main>
 
-  <section>
-    <p class="notion-footer small">Unofficial in-game tool. Adjust wording/time if your server rules change.</p>
-  </section>
+  <script>
+    const MAX_MINUTES = 60;
 
-</main>
+    /*
+     * If any selected charge is normal => normal.
+     * Else => probation.
+     */
+    function computeMode(selected) {
+      return selected.some(c => c.mode === "normal") ? "normal" : "probation";
+    }
 
-<script>
-  const MAX_MINUTES = 60;
+    function clampMinutes(n) {
+      return Math.min(MAX_MINUTES, Math.max(0, n));
+    }
 
-  /*
-   * If any selected charge is normal => normal.
-   * Else => probation.
-   */
-  function computeMode(selected) {
-    return selected.some(c => c.mode === 'normal') ? 'normal' : 'probation';
-  }
+    function computeTotalMinutes(selected) {
+      const sum = selected.reduce((acc, c) => acc + c.minutes, 0);
+      return clampMinutes(sum);
+    }
 
-  function clampMinutes(n) {
-    return Math.min(MAX_MINUTES, Math.max(0, n));
-  }
+    function buildCommand(mode, minutes, selected) {
+      const label = selected.length ? selected.map(c => c.name).join(" + ") : "";
+      return `/jail ${mode} ${minutes}m${label ? " " + label : ""}`;
+    }
 
-  function computeTotalMinutes(selected) {
-    const sum = selected.reduce((acc, c) => acc + c.minutes, 0);
-    return clampMinutes(sum);
-  }
+    const CHARGES = [
+      // Low
+      { category: "Low", name: "Trespassing", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Obstruction", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Evading Arrest", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Fleeing on Foot", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Failure to Comply", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Violation of Probation", mode: "probation", minutes: 7 },
 
-  function buildCommand(mode, minutes, selected) {
-    const label = selected.length ? selected.map(c => c.name).join(' + ') : '';
-    return `/jail ${mode} ${minutes}m${label ? ' ' + label : ''}`;
-  }
+      // Medium
+      { category: "Medium", name: "Theft / Robbery", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Battery", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Illegal Weapon Possession", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Possession of Contraband", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Brandishing Firearm", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Resisting Arrest", mode: "normal", minutes: 15 },
+      { category: "Medium", name: "Attempted Robbery", mode: "normal", minutes: 15 },
 
-  const CHARGES = [
-    // Low
-    { category: 'Low', name: 'Trespassing', mode: 'probation', minutes: 7 },
-    { category: 'Low', name: 'Obstruction', mode: 'probation', minutes: 7 },
-    { category: 'Low', name: 'Evading Arrest', mode: 'probation', minutes: 7 },
-    { category: 'Low', name: 'Fleeing on Foot', mode: 'probation', minutes: 7 },
-    { category: 'Low', name: 'Failure to Comply', mode: 'probation', minutes: 7 },
-    { category: 'Low', name: 'Violation of Probation', mode: 'probation', minutes: 7 },
+      // High
+      { category: "High", name: "Murder", mode: "normal", minutes: 40 },
+      { category: "High", name: "Attempted Murder", mode: "normal", minutes: 40 },
+      { category: "High", name: "Attempted Murder of LEO", mode: "normal", minutes: 40 },
+      { category: "High", name: "Assault on Officer", mode: "normal", minutes: 40 },
+      { category: "High", name: "Armed Robbery", mode: "normal", minutes: 40 },
+      { category: "High", name: "Drive-By Shooting", mode: "normal", minutes: 40 },
+      { category: "High", name: "Shooting Into Crowd", mode: "normal", minutes: 40 },
+      { category: "High", name: "Kidnapping", mode: "normal", minutes: 40 },
+      { category: "High", name: "Fraud", mode: "normal", minutes: 40 },
 
-    // Medium
-    { category: 'Medium', name: 'Theft / Robbery', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Battery', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Illegal Weapon Possession', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Possession of Contraband', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Brandishing Firearm', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Resisting Arrest', mode: 'normal', minutes: 15 },
-    { category: 'Medium', name: 'Attempted Robbery', mode: 'normal', minutes: 15 },
+      // Very High
+      { category: "Very High", name: "Murder of LEO", mode: "normal", minutes: 60 },
+      { category: "Very High", name: "Bank Robbery", mode: "normal", minutes: 60 },
+      { category: "Very High", name: "RICO Charges", mode: "normal", minutes: 60 },
+      { category: "Very High", name: "Hostage Taking", mode: "normal", minutes: 60 },
+      { category: "Very High", name: "Mass Shooting", mode: "normal", minutes: 60 },
+      { category: "Very High", name: "Arms Trafficking", mode: "normal", minutes: 60 },
+    ];
 
-    // High
-    { category: 'High', name: 'Murder', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Attempted Murder', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Attempted Murder of LEO', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Assault on Officer', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Armed Robbery', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Drive-By Shooting', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Shooting Into Crowd', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Kidnapping', mode: 'normal', minutes: 40 },
-    { category: 'High', name: 'Fraud', mode: 'normal', minutes: 40 },
+    const els = {
+      table: document.getElementById("chargeTable"),
+      totalMinutes: document.getElementById("totalMinutes"),
+      mode: document.getElementById("mode"),
+      commandOut: document.getElementById("commandOut"),
+      btnSelectAll: document.getElementById("btn-select-all"),
+      btnClear: document.getElementById("btn-clear"),
+      btnCopy: document.getElementById("btn-copy"),
+      searchInput: document.getElementById("searchInput"),
+      btnSearchClear: document.getElementById("btn-search-clear"),
+    };
 
-    // Very High
-    { category: 'Very High', name: 'Murder of LEO', mode: 'normal', minutes: 60 },
-    { category: 'Very High', name: 'Bank Robbery', mode: 'normal', minutes: 60 },
-    { category: 'Very High', name: 'RICO Charges', mode: 'normal', minutes: 60 },
-    { category: 'Very High', name: 'Hostage Taking', mode: 'normal', minutes: 60 },
-    { category: 'Very High', name: 'Mass Shooting', mode: 'normal', minutes: 60 },
-    { category: 'Very High', name: 'Arms Trafficking', mode: 'normal', minutes: 60 },
-  ];
+    // ✅ Persistent selection state: survives search / re-render
+    // key = idx, value = true/false
+    const selectedByIdx = new Map();
 
-  const els = {
-    table: document.getElementById('chargeTable'),
-    totalMinutes: document.getElementById('totalMinutes'),
-    mode: document.getElementById('mode'),
-    commandOut: document.getElementById('commandOut'),
-    btnSelectAll: document.getElementById('btn-select-all'),
-    btnClear: document.getElementById('btn-clear'),
-    btnCopy: document.getElementById('btn-copy'),
-    searchInput: document.getElementById('searchInput'),
-    btnSearchClear: document.getElementById('btn-search-clear'),
-  };
+    function getSelectedCharges() {
+      const selected = [];
+      for (const [idx, isOn] of selectedByIdx.entries()) {
+        if (isOn) selected.push(CHARGES[idx]);
+      }
+      return selected;
+    }
 
-  function renderTable() {
-    const q = (els.searchInput?.value || '').trim().toLowerCase();
-    els.table.innerHTML = '';
+    function recalc() {
+      const selected = getSelectedCharges();
+      const mode = computeMode(selected);
+      const minutes = computeTotalMinutes(selected);
 
-    CHARGES.forEach((c, idx) => {
-      if (q && !c.name.toLowerCase().includes(q)) return;
+      els.totalMinutes.textContent = `${minutes}m`;
+      els.mode.textContent = mode;
+      els.commandOut.textContent = buildCommand(mode, minutes, selected);
+    }
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input type="checkbox" data-idx="${idx}" aria-label="Select ${c.name}" /></td>
+    function rowHtml(c) {
+      // only for the non-checkbox cells
+      return `
         <td>${c.name}</td>
         <td>${c.category}</td>
         <td class="mono">${c.mode}</td>
         <td class="mono">${c.minutes}m</td>
       `;
-      els.table.appendChild(tr);
-    });
-  }
-
-  function getSelectedCharges() {
-    const checks = els.table.querySelectorAll('input[type="checkbox"]');
-    const selected = [];
-    checks.forEach(chk => {
-      if (chk.checked) selected.push(CHARGES[Number(chk.dataset.idx)]);
-    });
-    return selected;
-  }
-
-  function recalc() {
-    const selected = getSelectedCharges();
-    const mode = computeMode(selected);
-    const minutes = computeTotalMinutes(selected);
-
-    els.totalMinutes.textContent = `${minutes}m`;
-    els.mode.textContent = mode;
-    els.commandOut.textContent = buildCommand(mode, minutes, selected);
-  }
-
-  function setAll(checked) {
-    const checks = els.table.querySelectorAll('input[type="checkbox"]');
-    checks.forEach(c => (c.checked = checked));
-    recalc();
-  }
-
-  async function copyCommand() {
-    const txt = els.commandOut.textContent || '';
-    try {
-      await navigator.clipboard.writeText(txt);
-      els.btnCopy.textContent = 'Copied!';
-      setTimeout(() => (els.btnCopy.textContent = 'Copy command'), 900);
-    } catch (e) {
-      // Fallback
-      const r = document.createRange();
-      r.selectNodeContents(els.commandOut);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(r);
-      document.execCommand('copy');
-      sel.removeAllRanges();
     }
-  }
 
-  // Initial render
-  renderTable();
-  recalc();
+    function renderTable() {
+      const q = (els.searchInput?.value || "").trim().toLowerCase();
+      els.table.innerHTML = "";
 
-  // Events
-  els.table.addEventListener('change', recalc);
+      CHARGES.forEach((c, idx) => {
+        if (q && !c.name.toLowerCase().includes(q)) return;
 
-  els.searchInput?.addEventListener('input', () => {
+        const tr = document.createElement("tr");
+
+        // checkbox cell
+        const tdPick = document.createElement("td");
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.dataset.idx = String(idx);
+        chk.setAttribute("aria-label", `Select ${c.name}`);
+
+        // restore state
+        chk.checked = selectedByIdx.get(idx) === true;
+
+        chk.addEventListener("change", () => {
+          selectedByIdx.set(idx, chk.checked);
+          recalc();
+        });
+
+        tdPick.appendChild(chk);
+        tr.appendChild(tdPick);
+
+        // rest of cells
+        tr.insertAdjacentHTML("beforeend", rowHtml(c));
+
+        els.table.appendChild(tr);
+      });
+    }
+
+    function setAll(checked) {
+      // Select/Clear ALL charges, even if filtered out by search
+      CHARGES.forEach((_, idx) => selectedByIdx.set(idx, checked));
+      renderTable(); // update visible checkbox states
+      recalc();
+    }
+
+    async function copyCommand() {
+      const txt = els.commandOut.textContent || "";
+      try {
+        await navigator.clipboard.writeText(txt);
+        els.btnCopy.textContent = "Copied!";
+        setTimeout(() => (els.btnCopy.textContent = "Copy command"), 900);
+      } catch (e) {
+        // Fallback
+        const r = document.createRange();
+        r.selectNodeContents(els.commandOut);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+        document.execCommand("copy");
+        sel.removeAllRanges();
+      }
+    }
+
+    // Init
     renderTable();
     recalc();
-  });
 
-  els.btnSearchClear?.addEventListener('click', () => {
-    els.searchInput.value = '';
-    renderTable();
-    recalc();
-    els.searchInput.focus();
-  });
+    // Search handlers
+    els.searchInput?.addEventListener("input", () => {
+      renderTable();
+      recalc();
+    });
 
-  els.btnSelectAll.addEventListener('click', () => setAll(true));
-  els.btnClear.addEventListener('click', () => setAll(false));
-  els.btnCopy.addEventListener('click', copyCommand);
-</script>
+    els.btnSearchClear?.addEventListener("click", () => {
+      els.searchInput.value = "";
+      renderTable();
+      recalc();
+      els.searchInput.focus();
+    });
+
+    // Toolbar actions
+    els.btnSelectAll.addEventListener("click", () => setAll(true));
+    els.btnClear.addEventListener("click", () => setAll(false));
+    els.btnCopy.addEventListener("click", copyCommand);
+  </script>
 </body>
 </html>
