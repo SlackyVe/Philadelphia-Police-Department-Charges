@@ -6,7 +6,6 @@
   <title>Philadelphia Police Department — Arrest Charges & Jail Calculator</title>
 
   <style>
-    /* Notion-style component CSS */
     :root{
       --notion-bg:#ffffff;
       --notion-fg:#0f172a;
@@ -37,9 +36,7 @@
     section{margin: 18px 0 0}
     h1{font-size: 34px; line-height: 1.1; margin: 6px 0 0}
     p{color: var(--notion-muted); margin: 10px 0 0; line-height: 1.5}
-    a{color: var(--notion-accent)}
 
-    /* hero.css */
     .notion-hero{
       padding: 22px 22px;
       border: 1px solid var(--notion-border);
@@ -59,7 +56,6 @@
       background: #fff;
     }
 
-    /* callout.css */
     .notion-callout{
       display:flex;
       gap: 12px;
@@ -71,11 +67,7 @@
     }
     .notion-callout strong{display:block; margin-bottom:4px}
     .notion-callout[data-tone="blue"]{border-color: rgba(37,99,235,.25); background: rgba(37,99,235,.06)}
-    .notion-callout[data-tone="orange"]{border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.08)}
-    .notion-callout[data-tone="red"]{border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.07)}
-    .notion-callout[data-tone="green"]{border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.07)}
 
-    /* card-grid.css */
     .notion-card-grid{
       display:grid;
       grid-template-columns: repeat(12, 1fr);
@@ -89,14 +81,10 @@
       box-shadow: var(--notion-shadow);
       padding: 14px 14px;
     }
-    @media (min-width: 760px){
-      .notion-card{grid-column: span 12;}
-    }
     .notion-card h3{margin: 8px 0 0; font-size: 18px}
     .notion-card p{margin: 8px 0 0}
     .notion-card-icon{font-size: 18px}
 
-    /* button.css */
     .notion-button{
       display:inline-flex;
       align-items:center;
@@ -116,7 +104,6 @@
     .notion-button[data-variant="secondary"]{background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.2)}
     .notion-button[data-size="small"]{padding: 7px 10px; border-radius: 10px; font-size: 13px}
 
-    /* table.css */
     table{
       width:100%;
       border-collapse:separate;
@@ -140,7 +127,6 @@
     }
     tr:last-child td{border-bottom:none}
 
-    /* custom styles */
     .toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top: 12px}
     .pill{
       display:inline-flex;
@@ -163,7 +149,6 @@
     }
     .output pre{margin:0; white-space: pre-wrap; word-break: break-word}
 
-    /* Search */
     .searchbar{
       display:inline-flex;
       align-items:center;
@@ -265,25 +250,21 @@
   <script>
     const MAX_MINUTES = 60;
 
-    /*
-     * If any selected charge is normal => normal.
-     * Else => probation.
-     */
-    function computeMode(selected) {
-      return selected.some(c => c.mode === "normal") ? "normal" : "probation";
+    function computeMode(selectedCharges) {
+      return selectedCharges.some(c => c.mode === "normal") ? "normal" : "probation";
     }
 
     function clampMinutes(n) {
       return Math.min(MAX_MINUTES, Math.max(0, n));
     }
 
-    function computeTotalMinutes(selected) {
-      const sum = selected.reduce((acc, c) => acc + c.minutes, 0);
+    function computeTotalMinutes(selectedCharges) {
+      const sum = selectedCharges.reduce((acc, c) => acc + c.minutes, 0);
       return clampMinutes(sum);
     }
 
-    function buildCommand(mode, minutes, selected) {
-      const label = selected.length ? selected.map(c => c.name).join(" + ") : "";
+    function buildCommand(mode, minutes, selectedCharges) {
+      const label = selectedCharges.length ? selectedCharges.map(c => c.name).join(" + ") : "";
       return `/jail ${mode} ${minutes}m${label ? " " + label : ""}`;
     }
 
@@ -337,44 +318,53 @@
       btnSearchClear: document.getElementById("btn-search-clear"),
     };
 
-    // ✅ Persistent selection state: survives search / re-render
-    // key = idx, value = true/false
-    const selectedByIdx = new Map();
+    // ✅ Persistent selection state (NOT DOM-based) + saved to localStorage
+    const STORAGE_KEY = "ppd_jail_calc_selected_v1";
+    const selected = new Array(CHARGES.length).fill(false);
+
+    function loadSelection() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return;
+        for (let i = 0; i < selected.length; i++) {
+          selected[i] = Boolean(arr[i]);
+        }
+      } catch (_) {}
+    }
+
+    function saveSelection() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
+      } catch (_) {}
+    }
 
     function getSelectedCharges() {
-      const selected = [];
-      for (const [idx, isOn] of selectedByIdx.entries()) {
-        if (isOn) selected.push(CHARGES[idx]);
+      const out = [];
+      for (let i = 0; i < CHARGES.length; i++) {
+        if (selected[i]) out.push(CHARGES[i]);
       }
-      return selected;
+      return out;
     }
 
     function recalc() {
-      const selected = getSelectedCharges();
-      const mode = computeMode(selected);
-      const minutes = computeTotalMinutes(selected);
+      const picked = getSelectedCharges();
+      const mode = computeMode(picked);
+      const minutes = computeTotalMinutes(picked);
 
       els.totalMinutes.textContent = `${minutes}m`;
       els.mode.textContent = mode;
-      els.commandOut.textContent = buildCommand(mode, minutes, selected);
-    }
-
-    function rowHtml(c) {
-      // only for the non-checkbox cells
-      return `
-        <td>${c.name}</td>
-        <td>${c.category}</td>
-        <td class="mono">${c.mode}</td>
-        <td class="mono">${c.minutes}m</td>
-      `;
+      els.commandOut.textContent = buildCommand(mode, minutes, picked);
     }
 
     function renderTable() {
-      const q = (els.searchInput?.value || "").trim().toLowerCase();
+      const q = (els.searchInput.value || "").trim().toLowerCase();
       els.table.innerHTML = "";
 
-      CHARGES.forEach((c, idx) => {
-        if (q && !c.name.toLowerCase().includes(q)) return;
+      for (let idx = 0; idx < CHARGES.length; idx++) {
+        const c = CHARGES[idx];
+        if (q && !c.name.toLowerCase().includes(q)) continue;
 
         const tr = document.createElement("tr");
 
@@ -382,31 +372,35 @@
         const tdPick = document.createElement("td");
         const chk = document.createElement("input");
         chk.type = "checkbox";
-        chk.dataset.idx = String(idx);
+        chk.checked = selected[idx]; // ✅ restore selection
         chk.setAttribute("aria-label", `Select ${c.name}`);
 
-        // restore state
-        chk.checked = selectedByIdx.get(idx) === true;
-
         chk.addEventListener("change", () => {
-          selectedByIdx.set(idx, chk.checked);
+          selected[idx] = chk.checked; // ✅ persist selection
+          saveSelection();
           recalc();
         });
 
         tdPick.appendChild(chk);
         tr.appendChild(tdPick);
 
-        // rest of cells
-        tr.insertAdjacentHTML("beforeend", rowHtml(c));
+        // rest of row
+        tr.insertAdjacentHTML(
+          "beforeend",
+          `<td>${c.name}</td>
+           <td>${c.category}</td>
+           <td class="mono">${c.mode}</td>
+           <td class="mono">${c.minutes}m</td>`
+        );
 
         els.table.appendChild(tr);
-      });
+      }
     }
 
     function setAll(checked) {
-      // Select/Clear ALL charges, even if filtered out by search
-      CHARGES.forEach((_, idx) => selectedByIdx.set(idx, checked));
-      renderTable(); // update visible checkbox states
+      for (let i = 0; i < selected.length; i++) selected[i] = checked;
+      saveSelection();
+      renderTable();
       recalc();
     }
 
@@ -417,7 +411,6 @@
         els.btnCopy.textContent = "Copied!";
         setTimeout(() => (els.btnCopy.textContent = "Copy command"), 900);
       } catch (e) {
-        // Fallback
         const r = document.createRange();
         r.selectNodeContents(els.commandOut);
         const sel = window.getSelection();
@@ -428,24 +421,25 @@
       }
     }
 
-    // Init
+    // INIT
+    loadSelection();
     renderTable();
     recalc();
 
-    // Search handlers
-    els.searchInput?.addEventListener("input", () => {
+    // Search interactions: re-render only (does NOT reset selected[])
+    els.searchInput.addEventListener("input", () => {
       renderTable();
       recalc();
     });
 
-    els.btnSearchClear?.addEventListener("click", () => {
+    els.btnSearchClear.addEventListener("click", () => {
       els.searchInput.value = "";
       renderTable();
       recalc();
       els.searchInput.focus();
     });
 
-    // Toolbar actions
+    // Buttons
     els.btnSelectAll.addEventListener("click", () => setAll(true));
     els.btnClear.addEventListener("click", () => setAll(false));
     els.btnCopy.addEventListener("click", copyCommand);
