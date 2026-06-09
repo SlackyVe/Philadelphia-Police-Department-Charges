@@ -162,6 +162,11 @@
 					<h3>Calculator</h3>
 					<p class="small">Tip: If any selected charge is <b>normal</b>, the output mode becomes <b>normal</b>. Otherwise it stays <b>probation</b>.</p>
 					<div class="toolbar">
+						<label class="pill" style="gap:10px;">
+							<span>🔎</span>
+							<span class="small">Search:</span>
+							<input id="searchInput" type="search" placeholder="Type a charge name…" style="border:none; outline:none; font: inherit; min-width: 210px; background: transparent;" />
+						</label>
 						<button class="notion-button" data-variant="secondary" id="btn-select-all">Select all</button>
 						<button class="notion-button" data-variant="secondary" id="btn-clear">Clear</button>
 						<button class="notion-button" data-variant="primary" id="btn-copy">Copy command</button>
@@ -268,11 +273,14 @@
 			btnSelectAll: document.getElementById('btn-select-all'),
 			btnClear: document.getElementById('btn-clear'),
 			btnCopy: document.getElementById('btn-copy'),
+			searchInput: document.getElementById('searchInput'),
 		};
 
 		function renderTable() {
+			const q = (els.searchInput?.value || '').trim().toLowerCase();
 			els.table.innerHTML = '';
 			CHARGES.forEach((c, idx) => {
+				if (q && !c.name.toLowerCase().includes(q)) return;
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
 					<td><input type="checkbox" data-idx="${idx}" aria-label="Select ${c.name}" /></td>
@@ -330,9 +338,14 @@
 		recalc();
 
 		els.table.addEventListener('change', recalc);
+		els.searchInput?.addEventListener('input', () => {
+			renderTable();
+			recalc();
+		});
 		els.btnSelectAll.addEventListener('click', () => setAll(true));
 		els.btnClear.addEventListener('click', () => setAll(false));
 		els.btnCopy.addEventListener('click', copyCommand);
 	</script>
 </body>
 </html>
+
