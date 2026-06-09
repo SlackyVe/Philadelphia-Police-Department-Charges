@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Philadelphia Police Department — Arrest Charges & Jail Calculator</title>
+	<style>
+		/* Notion-style component CSS */
+		/* _base.css */
+		:root{
+			--notion-bg:#ffffff;
+			--notion-fg:#0f172a;
+			--notion-muted:#475569;
+			--notion-border:#e2e8f0;
+			--notion-card:#ffffff;
+			--notion-shadow:0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15, 23, 42, 0.04);
+			--notion-radius:14px;
+			--notion-accent:#2563eb;
+			--notion-accent-2:#16a34a;
+			--notion-warning:#f59e0b;
+			--notion-danger:#ef4444;
+			--notion-chart-1:#3b82f6;
+			--notion-chart-2:#22c55e;
+			--notion-chart-3:#f59e0b;
+			--notion-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+		}
+		*{box-sizing:border-box}
+		html,body{height:100%}
+		body{
+			margin:0;
+			font-family:var(--notion-font);
+			color:var(--notion-fg);
+			background:linear-gradient(180deg,#f8fafc, #ffffff 30%);
+		}
+		main.notion-shell{
+			max-width: 980px;
+			margin: 0 auto;
+			padding: 28px 18px 64px;
+		}
+		section{margin: 18px 0 0}
+		h1{font-size: 34px; line-height: 1.1; margin: 6px 0 0}
+		p{color: var(--notion-muted); margin: 10px 0 0; line-height: 1.5}
+		a{color: var(--notion-accent)}
+		/* hero.css */
+		.notion-hero{
+			padding: 22px 22px;
+			border: 1px solid var(--notion-border);
+			background: rgba(255,255,255,0.85);
+			border-radius: var(--notion-radius);
+			box-shadow: var(--notion-shadow);
+		}
+		.notion-eyebrow{
+			display:inline-block;
+			font-size: 12px;
+			letter-spacing: .08em;
+			text-transform: uppercase;
+			color: var(--notion-muted);
+			border: 1px solid var(--notion-border);
+			padding: 6px 10px;
+			border-radius: 999px;
+			background: #fff;
+		}
+		/* callout.css */
+		.notion-callout{
+			display:flex;
+			gap: 12px;
+			padding: 14px 14px;
+			border-radius: 14px;
+			border: 1px solid var(--notion-border);
+			background: #fff;
+			box-shadow: var(--notion-shadow);
+		}
+		.notion-callout strong{display:block; margin-bottom:4px}
+		.notion-callout[data-tone="blue"]{border-color: rgba(37,99,235,.25); background: rgba(37,99,235,.06)}
+		.notion-callout[data-tone="orange"]{border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.08)}
+		.notion-callout[data-tone="red"]{border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.07)}
+		.notion-callout[data-tone="green"]{border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.07)}
+		/* card-grid.css */
+		.notion-card-grid{
+			display:grid;
+			grid-template-columns: repeat(12, 1fr);
+			gap: 12px;
+		}
+		.notion-card{
+			grid-column: span 12;
+			border: 1px solid var(--notion-border);
+			background: #fff;
+			border-radius: var(--notion-radius);
+			box-shadow: var(--notion-shadow);
+			padding: 14px 14px;
+		}
+		@media (min-width: 760px){
+			.notion-card{grid-column: span 6;}
+		}
+		.notion-card h3{margin: 8px 0 0; font-size: 18px}
+		.notion-card p{margin: 8px 0 0}
+		.notion-card-icon{font-size: 18px}
+		/* button.css */
+		.notion-button{
+			display:inline-flex;
+			align-items:center;
+			justify-content:center;
+			gap: 8px;
+			text-decoration:none;
+			font-weight: 600;
+			border-radius: 12px;
+			padding: 10px 12px;
+			border: 1px solid var(--notion-border);
+			color: var(--notion-fg);
+			background: #fff;
+			cursor:pointer;
+		}
+		.notion-button[data-variant="primary"]{background: var(--notion-accent); border-color: rgba(37,99,235,.25); color: #fff}
+		.notion-button[data-variant="secondary"]{background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.2)}
+		.notion-button[data-size="small"]{padding: 7px 10px; border-radius: 10px; font-size: 13px}
+		/* table.css */
+		table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius: 14px; border:1px solid var(--notion-border); background:#fff; box-shadow: var(--notion-shadow)}
+		th,td{padding: 10px 10px; border-bottom:1px solid var(--notion-border); vertical-align:top; text-align:left}
+		th{font-size: 13px; color: var(--notion-muted); background: rgba(248,250,252,.9)}
+		tr:last-child td{border-bottom:none}
+		/* custom styles */
+		.toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top: 12px}
+		.kv{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+		.pill{display:inline-flex; gap:8px; align-items:center; border:1px solid var(--notion-border); background:#fff; padding:8px 10px; border-radius:999px}
+		.pill b{color: var(--notion-fg)}
+		.small{font-size: 13px; color: var(--notion-muted)}
+		.charge-row{display:flex; gap:10px; align-items:flex-start}
+		input[type="checkbox"]{transform: translateY(2px)}
+		.mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+		.output{
+			border:1px solid var(--notion-border);
+			background:#fff;
+			border-radius: 14px;
+			box-shadow: var(--notion-shadow);
+			padding: 12px;
+		}
+		.output pre{margin:0; white-space: pre-wrap; word-break: break-word}
+	</style>
+</head>
+<body>
+	<main class="notion-shell">
+		<section class="notion-hero">
+			<span class="notion-eyebrow">Philadelphia Police Department</span>
+			<h1>Arrest Charges + Jail Time Calculator</h1>
+			<p>Select charges to auto-calculate jail time (in minutes). Jail time is capped at <strong>60m</strong> in-game.</p>
+		</section>
+
+		<section>
+			<div class="notion-callout" data-tone="blue">
+				<div>ℹ️</div>
+				<div>
+					<strong>How it works</strong>
+					<p>Pick charges below. The calculator sums the minutes, applies the 60m cap, and builds a command like: <span class="mono">/jail normal 15m Brandishing Firearm</span>.</p>
+				</div>
+			</div>
+		</section>
+
+		<section>
+			<div class="notion-card-grid">
+				<article class="notion-card" style="grid-column: span 12;">
+					<div class="notion-card-icon">🧮</div>
+					<h3>Calculator</h3>
+					<p class="small">Tip: If any selected charge is <b>normal</b>, the output mode becomes <b>normal</b>. Otherwise it stays <b>probation</b>.</p>
+					<div class="toolbar">
+						<button class="notion-button" data-variant="secondary" id="btn-select-all">Select all</button>
+						<button class="notion-button" data-variant="secondary" id="btn-clear">Clear</button>
+						<button class="notion-button" data-variant="primary" id="btn-copy">Copy command</button>
+						<span class="pill"><span>⏱️</span><span>Total:</span> <b id="totalMinutes">0m</b> <span class="small">(max 60m)</span></span>
+						<span class="pill"><span>⚖️</span><span>Mode:</span> <b id="mode">probation</b></span>
+					</div>
+					<div class="output" style="margin-top: 12px;">
+						<div class="small" style="margin-bottom: 8px;">Generated jail command</div>
+						<pre class="mono" id="commandOut">/jail probation 0m</pre>
+					</div>
+				</article>
+			</div>
+		</section>
+
+		<section>
+			<table aria-label="Charges">
+				<thead>
+					<tr>
+						<th style="width: 48px;">Pick</th>
+						<th>Charge</th>
+						<th style="width: 140px;">Category</th>
+						<th style="width: 120px;">Mode</th>
+						<th style="width: 100px;">Time</th>
+					</tr>
+				</thead>
+				<tbody id="chargeTable"></tbody>
+			</table>
+		</section>
+
+		<section>
+			<p class="notion-footer small">Unofficial in-game tool. Adjust wording/time if your server rules change.</p>
+		</section>
+	</main>
+
+	<script>
+		const MAX_MINUTES = 60;
+
+		/**
+		 * If any selected charge is normal => normal.
+		 * Else => probation.
+		 */
+		function computeMode(selected) {
+			return selected.some(c => c.mode === 'normal') ? 'normal' : 'probation';
+		}
+
+		function clampMinutes(n) {
+			return Math.min(MAX_MINUTES, Math.max(0, n));
+		}
+
+		function computeTotalMinutes(selected) {
+			const sum = selected.reduce((acc, c) => acc + c.minutes, 0);
+			return clampMinutes(sum);
+		}
+
+		function buildCommand(mode, minutes, selected) {
+			// Join charges as a readable label. (If your server needs separate commands, change this.)
+			const label = selected.length ? selected.map(c => c.name).join(' + ') : '';
+			return `/jail ${mode} ${minutes}m${label ? ' ' + label : ''}`;
+		}
+
+		const CHARGES = [
+			// Low
+			{ category: 'Low', name: 'Trespassing', mode: 'probation', minutes: 7 },
+			{ category: 'Low', name: 'Obstruction', mode: 'probation', minutes: 7 },
+			{ category: 'Low', name: 'Evading Arrest', mode: 'probation', minutes: 7 },
+			{ category: 'Low', name: 'Fleeing on Foot', mode: 'probation', minutes: 7 },
+			{ category: 'Low', name: 'Failure to Comply', mode: 'probation', minutes: 7 },
+			{ category: 'Low', name: 'Violation of Probation', mode: 'probation', minutes: 7 },
+
+			// Medium
+			{ category: 'Medium', name: 'Theft / Robbery', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Battery', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Illegal Weapon Possession', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Possession of Contraband', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Brandishing Firearm', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Resisting Arrest', mode: 'normal', minutes: 15 },
+			{ category: 'Medium', name: 'Attempted Robbery', mode: 'normal', minutes: 15 },
+
+			// High
+			{ category: 'High', name: 'Murder', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Attempted Murder', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Attempted Murder of LEO', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Assault on Officer', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Armed Robbery', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Drive-By Shooting', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Shooting Into Crowd', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Kidnapping', mode: 'normal', minutes: 40 },
+			{ category: 'High', name: 'Fraud', mode: 'normal', minutes: 40 },
+
+			// Very High
+			{ category: 'Very High', name: 'Murder of LEO', mode: 'normal', minutes: 60 },
+			{ category: 'Very High', name: 'Bank Robbery', mode: 'normal', minutes: 60 },
+			{ category: 'Very High', name: 'RICO Charges', mode: 'normal', minutes: 60 },
+			{ category: 'Very High', name: 'Hostage Taking', mode: 'normal', minutes: 60 },
+			{ category: 'Very High', name: 'Mass Shooting', mode: 'normal', minutes: 60 },
+			{ category: 'Very High', name: 'Arms Trafficking', mode: 'normal', minutes: 60 },
+		];
+
+		const els = {
+			table: document.getElementById('chargeTable'),
+			totalMinutes: document.getElementById('totalMinutes'),
+			mode: document.getElementById('mode'),
+			commandOut: document.getElementById('commandOut'),
+			btnSelectAll: document.getElementById('btn-select-all'),
+			btnClear: document.getElementById('btn-clear'),
+			btnCopy: document.getElementById('btn-copy'),
+		};
+
+		function renderTable() {
+			els.table.innerHTML = '';
+			CHARGES.forEach((c, idx) => {
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+					<td><input type="checkbox" data-idx="${idx}" aria-label="Select ${c.name}" /></td>
+					<td>${c.name}</td>
+					<td>${c.category}</td>
+					<td class="mono">${c.mode}</td>
+					<td class="mono">${c.minutes}m</td>
+				`;
+				els.table.appendChild(tr);
+			});
+		}
+
+		function getSelectedCharges() {
+			const checks = els.table.querySelectorAll('input[type="checkbox"]');
+			const selected = [];
+			checks.forEach(chk => {
+				if (chk.checked) selected.push(CHARGES[Number(chk.dataset.idx)]);
+			});
+			return selected;
+		}
+
+		function recalc() {
+			const selected = getSelectedCharges();
+			const mode = computeMode(selected);
+			const minutes = computeTotalMinutes(selected);
+			els.totalMinutes.textContent = `${minutes}m`;
+			els.mode.textContent = mode;
+			els.commandOut.textContent = buildCommand(mode, minutes, selected);
+		}
+
+		function setAll(checked) {
+			const checks = els.table.querySelectorAll('input[type="checkbox"]');
+			checks.forEach(c => (c.checked = checked));
+			recalc();
+		}
+
+		async function copyCommand() {
+			try {
+				await navigator.clipboard.writeText(els.commandOut.textContent);
+				els.btnCopy.textContent = 'Copied!';
+				setTimeout(() => (els.btnCopy.textContent = 'Copy command'), 900);
+			} catch (e) {
+				// Fallback
+				const r = document.createRange();
+				r.selectNodeContents(els.commandOut);
+				const sel = window.getSelection();
+				sel.removeAllRanges();
+				sel.addRange(r);
+				document.execCommand('copy');
+				sel.removeAllRanges();
+			}
+		}
+
+		renderTable();
+		recalc();
+
+		els.table.addEventListener('change', recalc);
+		els.btnSelectAll.addEventListener('click', () => setAll(true));
+		els.btnClear.addEventListener('click', () => setAll(false));
+		els.btnCopy.addEventListener('click', copyCommand);
+	</script>
+</body>
+</html>
