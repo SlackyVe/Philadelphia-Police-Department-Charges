@@ -198,11 +198,6 @@
         <article class="notion-card" style="grid-column: span 12;">
           <div class="notion-card-icon">🧮</div>
           <h3>Calculator</h3>
-          <p class="small">
-            Tip: If any selected charge is <b>normal</b>, the output mode becomes <b>normal</b>.
-            Otherwise it stays <b>probation</b>.
-          </p>
-
           <div class="toolbar">
             <div class="searchbar" role="search" aria-label="Search charges">
               <span aria-hidden="true">🔎</span>
@@ -269,24 +264,21 @@
     }
 
     const CHARGES = [
-      // Low
-      { category: "Low", name: "Trespassing", mode: "probation", minutes: 7 },
-      { category: "Low", name: "Obstruction", mode: "probation", minutes: 7 },
-      { category: "Low", name: "Evading Arrest", mode: "probation", minutes: 7 },
-      { category: "Low", name: "Fleeing on Foot", mode: "probation", minutes: 7 },
-      { category: "Low", name: "Failure to Comply", mode: "probation", minutes: 7 },
-      { category: "Low", name: "Violation of Probation", mode: "probation", minutes: 7 },
+      { category: "Low", name: "Trespassing", mode: "normal", minutes: 7 },
+      { category: "Low", name: "Obstruction", mode: "normal", minutes: 7 },
+      { category: "Low", name: "Evading Arrest", mode: "normal", minutes: 7 },
+      { category: "Low", name: "Fleeing on Foot", mode: "normal", minutes: 7 },
+      { category: "Low", name: "Failure to Comply", mode: "normal", minutes: 7 },
 
-      // Medium
-      { category: "Medium", name: "Theft / Robbery", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Battery", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Illegal Weapon Possession", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Possession of Contraband", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Brandishing Firearm", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Resisting Arrest", mode: "normal", minutes: 15 },
-      { category: "Medium", name: "Attempted Robbery", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Violation of Probation", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Theft / Robbery", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Battery", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Illegal Weapon Possession", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Possession of Contraband", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Brandishing Firearm", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Resisting Arrest", mode: "normal", minutes: 15 },
+      { category: "Med", name: "Attempted Robbery", mode: "normal", minutes: 15 },
 
-      // High
       { category: "High", name: "Murder", mode: "normal", minutes: 40 },
       { category: "High", name: "Attempted Murder", mode: "normal", minutes: 40 },
       { category: "High", name: "Attempted Murder of LEO", mode: "normal", minutes: 40 },
@@ -297,7 +289,6 @@
       { category: "High", name: "Kidnapping", mode: "normal", minutes: 40 },
       { category: "High", name: "Fraud", mode: "normal", minutes: 40 },
 
-      // Very High
       { category: "Very High", name: "Murder of LEO", mode: "normal", minutes: 60 },
       { category: "Very High", name: "Bank Robbery", mode: "normal", minutes: 60 },
       { category: "Very High", name: "RICO Charges", mode: "normal", minutes: 60 },
@@ -318,7 +309,6 @@
       btnSearchClear: document.getElementById("btn-search-clear"),
     };
 
-    // ✅ Persistent selection state (NOT DOM-based) + saved to localStorage
     const STORAGE_KEY = "ppd_jail_calc_selected_v1";
     const selected = new Array(CHARGES.length).fill(false);
 
@@ -368,15 +358,14 @@
 
         const tr = document.createElement("tr");
 
-        // checkbox cell
         const tdPick = document.createElement("td");
         const chk = document.createElement("input");
         chk.type = "checkbox";
-        chk.checked = selected[idx]; // ✅ restore selection
+        chk.checked = selected[idx];
         chk.setAttribute("aria-label", `Select ${c.name}`);
 
         chk.addEventListener("change", () => {
-          selected[idx] = chk.checked; // ✅ persist selection
+          selected[idx] = chk.checked;
           saveSelection();
           recalc();
         });
@@ -384,7 +373,6 @@
         tdPick.appendChild(chk);
         tr.appendChild(tdPick);
 
-        // rest of row
         tr.insertAdjacentHTML(
           "beforeend",
           `<td>${c.name}</td>
@@ -421,12 +409,10 @@
       }
     }
 
-    // INIT
     loadSelection();
     renderTable();
     recalc();
 
-    // Search interactions: re-render only (does NOT reset selected[])
     els.searchInput.addEventListener("input", () => {
       renderTable();
       recalc();
@@ -439,10 +425,12 @@
       els.searchInput.focus();
     });
 
-    // Buttons
     els.btnSelectAll.addEventListener("click", () => setAll(true));
     els.btnClear.addEventListener("click", () => setAll(false));
     els.btnCopy.addEventListener("click", copyCommand);
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
