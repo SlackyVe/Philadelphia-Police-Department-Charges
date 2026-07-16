@@ -264,38 +264,42 @@
     }
 
     const CHARGES = [
-      { category: "Low", name: "Trespassing", mode: "normal", minutes: 7 },
-      { category: "Low", name: "Obstruction", mode: "normal", minutes: 7 },
-      { category: "Low", name: "Evading Arrest", mode: "normal", minutes: 7 },
-      { category: "Low", name: "Fleeing on Foot", mode: "normal", minutes: 7 },
-      { category: "Low", name: "Failure to Comply", mode: "normal", minutes: 7 },
+    // Low — 7m (Updated to probation)
+    { category: "Low", name: "Trespassing", mode: "probation", minutes: 7 },
+    { category: "Low", name: "Obstruction", mode: "probation", minutes: 7 },
+    { category: "Low", name: "Evading Arrest", mode: "probation", minutes: 7 },
+    { category: "Low", name: "Fleeing on Foot", mode: "probation", minutes: 7 },
+    { category: "Low", name: "Failure to Comply", mode: "probation", minutes: 7 },
 
-      { category: "Med", name: "Violation of Probation", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Theft / Robbery", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Battery", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Illegal Weapon Possession", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Possession of Contraband", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Brandishing Firearm", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Resisting Arrest", mode: "normal", minutes: 15 },
-      { category: "Med", name: "Attempted Robbery", mode: "normal", minutes: 15 },
+    // Med — 15m
+    { category: "Med", name: "Violation of Probation", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Theft / Robbery", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Battery", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Illegal Weapon Possession", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Possession of Contraband", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Brandishing Firearm", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Resisting Arrest", mode: "normal", minutes: 15 },
+    { category: "Med", name: "Attempted Robbery", mode: "normal", minutes: 15 },
 
-      { category: "High", name: "Murder", mode: "normal", minutes: 40 },
-      { category: "High", name: "Attempted Murder", mode: "normal", minutes: 40 },
-      { category: "High", name: "Attempted Murder of LEO", mode: "normal", minutes: 40 },
-      { category: "High", name: "Assault on Officer", mode: "normal", minutes: 40 },
-      { category: "High", name: "Armed Robbery", mode: "normal", minutes: 40 },
-      { category: "High", name: "Drive-By Shooting", mode: "normal", minutes: 40 },
-      { category: "High", name: "Shooting Into Crowd", mode: "normal", minutes: 40 },
-      { category: "High", name: "Kidnapping", mode: "normal", minutes: 40 },
-      { category: "High", name: "Fraud", mode: "normal", minutes: 40 },
+    // High — 40m
+    { category: "High", name: "Murder", mode: "normal", minutes: 40 },
+    { category: "High", name: "Attempted Murder", mode: "normal", minutes: 40 },
+    { category: "High", name: "Attempted Murder of LEO", mode: "normal", minutes: 40 },
+    { category: "High", name: "Assault on Officer", mode: "normal", minutes: 40 },
+    { category: "High", name: "Armed Robbery", mode: "normal", minutes: 40 },
+    { category: "High", name: "Drive-By Shooting", mode: "normal", minutes: 40 },
+    { category: "High", name: "Shooting Into Crowd", mode: "normal", minutes: 40 },
+    { category: "High", name: "Kidnapping", mode: "normal", minutes: 40 },
+    { category: "High", name: "Fraud", mode: "normal", minutes: 40 },
 
-      { category: "Very High", name: "Murder of LEO", mode: "normal", minutes: 60 },
-      { category: "Very High", name: "Bank Robbery", mode: "normal", minutes: 60 },
-      { category: "Very High", name: "RICO Charges", mode: "normal", minutes: 60 },
-      { category: "Very High", name: "Hostage Taking", mode: "normal", minutes: 60 },
-      { category: "Very High", name: "Mass Shooting", mode: "normal", minutes: 60 },
-      { category: "Very High", name: "Arms Trafficking", mode: "normal", minutes: 60 },
-    ];
+    // Very High — 60m
+    { category: "Very High", name: "Murder of LEO", mode: "normal", minutes: 60 },
+    { category: "Very High", name: "Bank Robbery", mode: "normal", minutes: 60 },
+    { category: "Very High", name: "RICO Charges", mode: "normal", minutes: 60 },
+    { category: "Very High", name: "Hostage Taking", mode: "normal", minutes: 60 },
+    { category: "Very High", name: "Mass Shooting", mode: "normal", minutes: 60 },
+    { category: "Very High", name: "Arms Trafficking", mode: "normal", minutes: 60 },
+  ];
 
     const els = {
       table: document.getElementById("chargeTable"),
